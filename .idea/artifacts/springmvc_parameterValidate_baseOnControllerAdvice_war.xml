@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="springmvc-parameterValidate-baseOnControllerAdvice:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="springmvc-parameterValidate-baseOnControllerAdvice-0.0.1-SNAPSHOT.war">
+      <element id="artifact" artifact-name="springmvc-parameterValidate-baseOnControllerAdvice:war exploded" />
+    </root>
+  </artifact>
+</component>
