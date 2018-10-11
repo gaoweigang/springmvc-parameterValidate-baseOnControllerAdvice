@@ -123,12 +123,13 @@
 			<scope>test</scope>
 		</dependency>
 
-        <!--Java Bean Validation 依赖于validation-api会自动导入-->
+        <!--**********Java Bean Validation 依赖于validation-api会自动导入***********-->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
 			<version>6.0.12.Final</version>
 		</dependency>
+		<!--*********************************************************-->
 
 
         <!-- jackson start Springmvc对象转json依赖，否则返回前端对象报错-->

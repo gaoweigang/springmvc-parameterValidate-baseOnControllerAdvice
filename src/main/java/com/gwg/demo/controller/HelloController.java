@@ -115,7 +115,7 @@ public class HelloController {
     }
 
     /**
-     * 未知异常--抛出异常ArithmeticException，
+     * 未知异常--抛出异常ArithmeticException，被全局异常处理器@ExceptionHandler(value = Exception.class)捕获
      */
     @RequestMapping(value = "/unknownException2", method = RequestMethod.GET)
     public @ResponseBody Result unknownException2(){

@@ -39,7 +39,7 @@ public class ExceptionHandlerAdvice {
 	/**
 	 * 校验参数
 	 *
-	 * 捕捉@@Valid 校验注解抛出的异常
+	 * 捕捉@Valid 校验注解抛出的异常
 	 * 当带有@Valid注解的参数验证失败时，将抛出异常MethodArgumentNotValidException
 	 */
 	@ExceptionHandler(MethodArgumentNotValidException.class)
@@ -109,7 +109,7 @@ public class ExceptionHandlerAdvice {
 	 *  声明了对 Exception 异常的处理，起到兜底作用，不管 Controller 层执行的代码出现了什么未能考虑到的异常，
 	 *  都返回统一的错误提示给客户端。
 	 */
-	@ExceptionHandler(value = Exception.class) // 2
+	@ExceptionHandler(value = Exception.class) // 处理Exception异常，优先级靠后，因为会先精确匹配
 	@ResponseStatus(value = HttpStatus.OK) //响应200
 	@ResponseBody
 	public Result<?> exception(Exception e, WebRequest request) {

@@ -1,0 +1,322 @@
+参数校验是我们程序开发中必不可少的过程。用户在前端页面上填写表单时，前端js程序会校验参数的合法性，当数据到了后端，为了防止恶意操作，保持程序的健壮性，后端同样需要对数据进行校验。后端参数校验最简单的做法是直接在业务方法里面进行判断，当判断成功之后再继续往下执行。但这样带给我们的是代码的耦合，冗余。当我们多个地方需要校验时，我们就需要在每一个地方调用校验程序,导致代码很冗余，且不美观。
+
+那么如何优雅的对参数进行校验呢？JSR303就是为了解决这个问题出现的，本篇文章主要是介绍 JSR303，Hibernate Validator 等校验工具的使用，以及自定义校验注解的使用。
+
+校验框架介绍
+JSR303 是一套JavaBean参数校验的标准，它定义了很多常用的校验注解，我们可以直接将这些注解加在我们JavaBean的属性上面，就可以在需要校验的时候进行校验了。注解如下：
+
+
+
+Hibernate validator 在JSR303的基础上对校验注解进行了扩展，扩展注解如下：
+
+
+
+Spring validtor 同样扩展了jsr303,并实现了方法参数和返回值的校验
+
+Spring 提供了MethodValidationPostProcessor类，用于对方法的校验
+
+代码实现
+添加JAR包依赖
+在pom.xml中添加如下依赖:
+
+复制代码
+        <!--jsr 303-->
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>1.1.0.Final</version>
+        </dependency>
+        <!-- hibernate validator-->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>5.2.0.Final</version>
+        </dependency>
+复制代码
+
+
+最简单的参数校验
+1、Model 中添加校验注解
+
+复制代码
+public class Book {
+    private long id;
+
+    /**
+     * 书名
+     */
+    @NotEmpty(message = "书名不能为空")
+    private String bookName;
+    /**
+     * ISBN号
+     */
+    @NotNull(message = "ISBN号不能为空")
+    private String bookIsbn;
+    /**
+     * 单价
+     */
+    @DecimalMin(value = "0.1",message = "单价最低为0.1")
+    private double price; // getter setter .......  }
+复制代码
+
+
+2、在controller中使用此校验
+
+复制代码
+ /**
+     * 添加Book对象
+     * @param book
+     */
+    @RequestMapping(value = "/book", method = RequestMethod.POST)
+    public void addBook(@RequestBody @Valid Book book) {
+        System.out.println(book.toString());
+    }
+复制代码
+
+
+当访问这个post接口时，如果参数不符合Model中定义的话，程序中就回抛出400异常，并提示错误信息。
+
+自定义校验注解
+虽然jSR303和Hibernate Validtor 已经提供了很多校验注解，但是当面对复杂参数校验时，还是不能满足我们的要求，这时候我们就需要 自定义校验注解。
+
+下面以“List数组中不能含有null元素”为实例自定义校验注解
+
+1、注解定义如下：
+
+复制代码
+package com.beiyan.validate.annotation;
+
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import java.lang.annotation.*;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+/**
+ * 自定义参数校验注解
+ * 校验 List 集合中是否有null 元素
+ */
+
+@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD, ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Constraint(validatedBy = ListNotHasNullValidatorImpl.class)////此处指定了注解的实现类为ListNotHasNullValidatorImpl
+
+public @interface ListNotHasNull {
+
+    /**
+     * 添加value属性，可以作为校验时的条件,若不需要，可去掉此处定义
+     */
+    int value() default 0;
+
+    String message() default "List集合中不能含有null元素";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
+
+    /**
+     * 定义List，为了让Bean的一个属性上可以添加多套规则
+     */
+    @Target({METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER})
+    @Retention(RUNTIME)
+    @Documented
+    @interface List {
+        ListNotHasNull[] value();
+    }
+}
+复制代码
+
+
+2、注解实现类：
+
+复制代码
+package com.beiyan.validate.annotation;
+
+import org.springframework.stereotype.Service;
+
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import java.util.List;
+
+/**
+ * 自定义注解ListNotHasNull 的实现类
+ * 用于判断List集合中是否含有null元素
+ */
+
+@Service
+public class ListNotHasNullValidatorImpl implements ConstraintValidator<ListNotHasNull, List> {
+
+    private int value;
+
+    @Override
+    public void initialize(ListNotHasNull constraintAnnotation) {
+        //传入value 值，可以在校验中使用
+        this.value = constraintAnnotation.value();
+    }
+
+    public boolean isValid(List list, ConstraintValidatorContext constraintValidatorContext) {
+        for (Object object : list) {
+            if (object == null) {
+                //如果List集合中含有Null元素，校验失败
+                return false;
+            }
+        }
+        return true;
+    }
+
+}
+复制代码
+
+
+3、model添加注解:
+
+复制代码
+public class User {
+
+    //其他参数 .......
+
+/**
+     * 所拥有的书籍列表
+     */
+    @NotEmpty(message = "所拥有书籍不能为空")
+    @ListNotHasNull(message = "List 中不能含有null元素")
+    @Valid
+    private List<Book> books;
+    //getter setter 方法.......
+}
+复制代码
+
+
+使用方法同上，在在需要校验的Model上面加上@Valid 即可
+
+分组验证
+对同一个Model，我们在增加和修改时对参数的校验也是不一样的，这个时候我们就需要定义分组验证，步骤如下
+
+1、定义两个空接口，分别代表Person对象的增加校验规则和修改校验规则
+
+复制代码
+/**
+ * 可以在一个Model上面添加多套参数验证规则，此接口定义添加Person模型新增时的参数校验规则
+ */
+public interface PersonAddView {
+}
+
+/**
+ * 可以在一个Model上面添加多套参数验证规则，此接口定义添加Person模型修改时的参数校验规则
+ */
+public interface PersonModifyView {
+}
+复制代码
+
+
+2、Model上添加注解时使用指明所述的分组
+
+复制代码
+public class Person {
+    private long id;
+    /**
+     * 添加groups 属性，说明只在特定的验证规则里面起作用，不加则表示在使用Deafault规则时起作用
+     */
+    @NotNull(groups = {PersonAddView.class, PersonModifyView.class}, message = "添加、修改用户时名字不能为空", payload = ValidateErrorLevel.Info.class)
+    @ListNotHasNull.List({
+            @ListNotHasNull(groups = {PersonAddView.class}, message = "添加上Name不能为空"),
+            @ListNotHasNull(groups = {PersonModifyView.class}, message = "修改时Name不能为空")})
+    private String name;
+
+    @NotNull(groups = {PersonAddView.class}, message = "添加用户时地址不能为空")
+    private String address;
+
+    @Min(value = 18, groups = {PersonAddView.class}, message = "姓名不能低于18岁")
+    @Max(value = 30, groups = {PersonModifyView.class}, message = "姓名不能超过30岁")
+    private int age;
+  //getter setter 方法......
+}
+复制代码
+
+
+3、启用校验
+
+此时启用校验和之前的不同,需要指明启用哪一组规则
+
+复制代码
+  /**
+     * 添加一个Person对象
+     * 此处启用PersonAddView 这个验证规则
+     * 备注：此处@Validated(PersonAddView.class) 表示使用PersonAndView这套校验规则，若使用@Valid 则表示使用默认校验规则，
+     * 若两个规则同时加上去，则只有第一套起作用
+     */
+    @RequestMapping(value = "/person", method = RequestMethod.POST)
+    public void addPerson(@RequestBody @Validated({PersonAddView.class, Default.class}) Person person) {
+        System.out.println(person.toString());
+    }
+
+    /**
+     * 修改Person对象
+     * 此处启用PersonModifyView 这个验证规则
+     */
+    @RequestMapping(value = "/person", method = RequestMethod.PUT)
+    public void modifyPerson(@RequestBody @Validated(value = {PersonModifyView.class}) Person person) {
+        System.out.println(person.toString());
+    }
+复制代码
+
+
+Spring validator 方法级别的校验
+JSR和Hibernate validator的校验只能对Object的属性进行校验，不能对单个的参数进行校验，spring 在此基础上进行了扩展，添加了MethodValidationPostProcessor拦截器，可以实现对方法参数的校验，实现如下:
+
+1、实例化MethodValidationPostProcessor
+
+@Bean
+    public MethodValidationPostProcessor methodValidationPostProcessor() {
+        return new MethodValidationPostProcessor();
+    }
+
+
+2、在所要实现方法参数校验的类上面添加@Validated，如下
+
+@RestController
+@Validated
+public class ValidateController {
+}
+
+
+3、在方法上面添加校验规则:
+
+  @RequestMapping(value = "/test", method = RequestMethod.GET)
+    public String paramCheck(@Length(min = 10) @RequestParam String name) {
+        System.out.println(name);
+        return null;
+    }
+
+
+当方法上面的参数校验失败,spring 框架就回抛出异常
+
+复制代码
+{
+  "timestamp": 1476108200558,
+  "status": 500,
+  "error": "Internal Server Error",
+  "exception": "javax.validation.ConstraintViolationException",
+  "message": "No message available",
+  "path": "/test"
+}
+复制代码
+从此可以优雅的对参数进行校验了
+
+写在后面的话:
+本篇文章只列举了常用的几种校验方法，其实关于校验的内容还有很多:
+
+校验信息的国际化显示，
+
+组合参数校验，
+
+message中使用EL表达式，
+
+将校验信息绑定到ModelAndView等，这里就不一一列出了，下面这几篇文章写的也不错，读者可以参考：
+
+将校验信息绑定到ModelAndView    http://www.voidcn.com/blog/983836259/article/p-5794496.html
+
+集成Bean Validation 1.1(JSR-349)到SpringMVC   https://my.oschina.net/qjx1208/blog/200946
