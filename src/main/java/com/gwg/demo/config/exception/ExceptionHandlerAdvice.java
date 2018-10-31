@@ -17,6 +17,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartException;
 
 import javax.naming.SizeLimitExceededException;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.Set;
@@ -96,6 +97,21 @@ public class ExceptionHandlerAdvice {
 	public Result<?> handleSizeLimitExceededException(Exception ex, WebRequest request) {
 		log.error("WebRequest:" + request.toString());
 		log.error("handleSizeLimitExceededException", ex);
+		Result<?> result = Result.error(ReturnCode.PARAMETER_IS_EMPTY.getCode(), ex.getMessage());
+		result.setStatus(false);
+		return result;
+	}
+
+	/**
+	 * AssertException 断言异常处理
+	 * @param request
+	 */
+	@ExceptionHandler(IllegalArgumentException.class)
+	@ResponseStatus(value = HttpStatus.OK)
+	@ResponseBody
+	public Result<?> handleIllegalArgumentException(IllegalArgumentException ex,WebRequest request) {
+		log.error("WebRequest:" + request.toString());
+		log.error("handleIllegalArgumentException", ex);
 		Result<?> result = Result.error(ReturnCode.PARAMETER_IS_EMPTY.getCode(), ex.getMessage());
 		result.setStatus(false);
 		return result;

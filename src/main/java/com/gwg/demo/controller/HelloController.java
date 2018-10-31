@@ -4,6 +4,7 @@ import com.gwg.demo.common.Result;
 import com.gwg.demo.config.exception.Update;
 import com.gwg.demo.domain.Hello;
 import com.gwg.demo.service.HelloService;
+import com.gwg.demo.utils.Assert;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
@@ -126,6 +127,16 @@ public class HelloController {
     }
 
 
+
+    /**
+     * AssertException测试
+     */
+    @RequestMapping(value = "/assertException", method = RequestMethod.GET)
+    public @ResponseBody Result assertException(){
+        log.info("unknownException..................");
+        Assert.hasLength("gaoweigang", 100);
+        return Result.success(null);
+    }
 
 
 
