@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import javax.naming.SizeLimitExceededException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +30,7 @@ import java.util.logging.LogManager;
  */
 @Slf4j
 @ControllerAdvice
-public class ExceptionHandlerAdvice {
+public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {//也可以继承ResponseEntityExceptionHandler，根据不同异常类型，返回不同的status
 
 	@Bean
 	public MethodValidationPostProcessor methodValidationPostProcessor() {
