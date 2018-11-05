@@ -1,6 +1,7 @@
 package com.gwg.demo.controller;
 
 import com.gwg.demo.common.Result;
+import com.gwg.demo.config.exception.Add;
 import com.gwg.demo.config.exception.Update;
 import com.gwg.demo.domain.Hello;
 import com.gwg.demo.service.HelloService;
@@ -52,7 +53,7 @@ public class HelloController {
      * 在这里Validated没有指定分组，因此只校验没有分组的参数
      */
     @RequestMapping(value = "/queryHelloInfo2", method = RequestMethod.POST)
-    public @ResponseBody Result queryHelloInfo2(@Validated @RequestBody Hello hello){
+    public @ResponseBody Result queryHelloInfo2(@Validated(Add.class) @RequestBody Hello hello){
         log.info("queryHelloInfo..................");
         return Result.success(null);
     }
