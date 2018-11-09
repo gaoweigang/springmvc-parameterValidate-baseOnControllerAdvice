@@ -91,6 +91,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {//�
 
 	/**
 	 * Spring上传文件异常处理
+	 * FileUploadBase$SizeLimitExceededException: the request was rejected because its size (17869943) exceeds the configured maximum (10485760)
 	 */
 	@ExceptionHandler({ SizeLimitExceededException.class, MultipartException.class })
 	@ResponseStatus(value = HttpStatus.OK)
