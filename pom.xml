@@ -11,7 +11,7 @@
 		<mybatis.spring.version>1.1.1</mybatis.spring.version>
         <jackson.core.version>1.9.13</jackson.core.version>
         <jackson.mapper.version>1.9.13</jackson.mapper.version>
-        <jackson-databind.version>2.6.3</jackson-databind.version>
+        <jackson-databind.version>2.9.10.1</jackson-databind.version>
         <jackson-core.version>2.6.3</jackson-core.version>
 	</properties>
 
